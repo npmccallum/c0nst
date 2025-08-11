@@ -1,14 +1,8 @@
 use proc_macro2::TokenStream;
 use syn::ItemImpl;
 
-use super::{Adaptable, Target, Transform};
+use super::{Target, Transform};
 use crate::attrs::HasAttribute;
-
-impl Adaptable for ItemImpl {
-    fn can_adapt(&self) -> bool {
-        true
-    }
-}
 
 /// Implementation for ItemImpl
 impl Transform for ItemImpl {

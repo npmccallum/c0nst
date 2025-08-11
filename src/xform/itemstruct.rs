@@ -1,13 +1,7 @@
 use proc_macro2::TokenStream;
 use syn::ItemStruct;
 
-use super::{Adaptable, Target, Transform};
-
-impl Adaptable for ItemStruct {
-    fn can_adapt(&self) -> bool {
-        true
-    }
-}
+use super::{Target, Transform};
 
 /// Implementation for ItemStruct
 impl Transform for ItemStruct {

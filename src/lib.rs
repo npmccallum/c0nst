@@ -1,12 +1,12 @@
 //! # c0nst - Conditional Const Syntax Transformation
 //!
-//! A procedural macro that enables the sharing of code between const traits
-//! on nightly and non-const traits on stable. Your code will be annotated
-//! to indicate const behavior. This code will then be transformed based on
-//! your compilation target (stable or nightly).
+//! Macros that enable the sharing of code between const traits on nightly and
+//! non-const traits on stable. Your code will be annotated to indicate const
+//! behavior. This code will then be transformed based on your compilation
+//! target (stable or nightly).
 //!
-//!  * On nightly builds, the macro will emit const traits.
-//!  * On stable builds, the the macro will emit non-const traits.
+//!  * With feature `nightly` enabled, the macro will emit const traits.
+//!  * With feature `nightly` disabled, the macro will emit non-const traits.
 //!
 //! ## Macros
 //!
@@ -35,7 +35,7 @@
 //! pub struct Thing<T>(pub T);
 //!
 //! // `impl<...> const Default for ...` => `#[c0nst] impl<...> Default for ...`
-//! // `T: ~const Default` => `T: ?c0nst<Default>`
+//! // `T: [const] Default` => `T: ?c0nst<Default>`
 //! #[c0nst]
 //! impl<T: ?c0nst<Default>> Default for Thing<T> {
 //!     fn default() -> Self {
@@ -44,14 +44,14 @@
 //! }
 //!
 //! // `const fn default<...>() ...` => `#[c0nst] fn default<...>() ...`
-//! // `T: ~const Default` => `T: ?c0nst<Default>`
+//! // `T: [const] Default` => `T: ?c0nst<Default>`
 //! #[c0nst]
 //! pub fn default<T: ?c0nst<Default>>() -> T {
 //!     T::default()
 //! }
 //!
 //! // `T: const Default` => `T: c0nst<Default>`
-//! // Always requires const implementation
+//! // `const { ... }` => not supported
 //! #[m0rph]
 //! pub fn compile_time_default<T: c0nst<Default>>() -> T {
 //!     T::default()
@@ -68,13 +68,16 @@ mod xform;
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, Item};
-use xform::{Adaptable, Target, Transform};
+use xform::{Annotation, Target, Transform};
 
 /// Transforms an item without marking it as const.
 ///
-/// Transforms `#[c0nst]` annotations based on feature flags:
-/// - **Nightly** (`nightly` feature): Native `const trait` syntax
-/// - **Stable** (default): Non-const traits (removes `#[c0nst]` attributes)
+/// With feature `nightly` enabled, transforms the item by resolving all
+/// annotations to the nightly const trait syntax. With feature `nightly`
+/// disabled, transforms the item to use regular (non-const) traits.
+///
+/// This is useful when you want to transform types that have inner markings
+/// but are not themselves const.
 ///
 /// ## Supported Items
 /// - Traits, implementations, functions
@@ -87,34 +90,29 @@ use xform::{Adaptable, Target, Transform};
 #[proc_macro_attribute]
 pub fn m0rph(_args: TokenStream, input: TokenStream) -> TokenStream {
     let item = parse_macro_input!(input as Item);
-
-    // Check if the item can be adapted using the extension trait
-    if item.can_adapt() {
-        return item.transform(Target::default()).into();
+    match item.can_m0rph() {
+        Err(err) => err.to_compile_error().into(),
+        Ok(()) => item.transform(Target::default()).into(),
     }
-
-    syn::Error::new_spanned(&item, "cannot morph in this context")
-        .to_compile_error()
-        .into()
 }
 
 /// Transforms an item while marking it as const.
 ///
-/// Transforms `#[c0nst]` annotations based on feature flags:
-/// - **Nightly** (`nightly` feature): Native `const trait` syntax
-/// - **Stable** (default): Non-const traits (removes `#[c0nst]` attributes)
+/// With feature `nightly` enabled, transforms the item by resolving all
+/// annotations to the nightly const trait syntax. With feature `nightly`
+/// disabled, transforms the item to use regular (non-const) traits.
 ///
 /// ## Supported Items
 /// - Traits, implementations, functions
-/// - Structs, enums, unions, type aliases
-/// - Modules (transforms all contained `#[c0nst]` items)
 ///
 /// ## Conditional Bounds
-/// - `T: c0nst<Trait>` - Unconditionally const
-/// - `T: ?c0nst<Trait>` - Conditionally const
+/// - `T: c0nst<Trait>` - Unconditionally const (i.e. `const`)
+/// - `T: ?c0nst<Trait>` - Conditionally const (i.e. `[const]`)
 #[proc_macro_attribute]
 pub fn c0nst(args: TokenStream, input: TokenStream) -> TokenStream {
-    let input: proc_macro2::TokenStream = input.into();
-    let input = quote! { #[c0nst] #input };
-    m0rph(args, input.into())
+    let item = parse_macro_input!(input as Item);
+    match item.can_c0nst() {
+        Err(err) => err.to_compile_error().into(),
+        Ok(()) => m0rph(args, quote! { #[c0nst] #item }.into()),
+    }
 }

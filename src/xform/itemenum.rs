@@ -1,13 +1,7 @@
 use proc_macro2::TokenStream;
 use syn::ItemEnum;
 
-use super::{Adaptable, Target, Transform};
-
-impl Adaptable for ItemEnum {
-    fn can_adapt(&self) -> bool {
-        true
-    }
-}
+use super::{Target, Transform};
 
 /// Implementation for ItemEnum
 impl Transform for ItemEnum {

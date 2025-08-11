@@ -2,15 +2,7 @@ use proc_macro2::TokenStream;
 use quote::ToTokens;
 use syn::ItemMod;
 
-use super::{Adaptable, Target, Transform};
-
-impl Adaptable for ItemMod {
-    fn can_adapt(&self) -> bool {
-        // Only embedded modules (with content) can be adapted
-        // File modules don't have their content available in the token stream
-        self.content.is_some()
-    }
-}
+use super::{Target, Transform};
 
 /// Implementation for Module Items
 impl Transform for ItemMod {

@@ -2,20 +2,35 @@ use proc_macro2::TokenStream;
 use quote::ToTokens;
 use syn::Item;
 
-use super::{Adaptable, Target, Transform};
+use super::{Annotation, Target, Transform};
 
-impl Adaptable for Item {
-    fn can_adapt(&self) -> bool {
+impl Annotation for Item {
+    fn can_m0rph(&self) -> Result<(), syn::Error> {
         match self {
-            Item::Mod(item) => item.can_adapt(),
-            Item::Trait(item) => item.can_adapt(),
-            Item::Impl(item) => item.can_adapt(),
-            Item::Fn(item) => item.can_adapt(),
-            Item::Struct(item) => item.can_adapt(),
-            Item::Enum(item) => item.can_adapt(),
-            Item::Union(item) => item.can_adapt(),
-            Item::Type(item) => item.can_adapt(),
-            _ => false, // Other items are not adaptable
+            Item::Mod(item) if item.content.is_some() => Ok(()),
+            Item::Trait(..) => Ok(()),
+            Item::Impl(..) => Ok(()),
+            Item::Fn(..) => Ok(()),
+            Item::Struct(..) => Ok(()),
+            Item::Enum(..) => Ok(()),
+            Item::Union(..) => Ok(()),
+            Item::Type(..) => Ok(()),
+            _ => Err(syn::Error::new_spanned(
+                self,
+                "cannot use `#[m0rph]` in this context",
+            )),
+        }
+    }
+
+    fn can_c0nst(&self) -> Result<(), syn::Error> {
+        match self {
+            Item::Trait(..) => Ok(()),
+            Item::Impl(..) => Ok(()),
+            Item::Fn(..) => Ok(()),
+            _ => Err(syn::Error::new_spanned(
+                self,
+                "cannot use `#[c0nst]` in this context",
+            )),
         }
     }
 }

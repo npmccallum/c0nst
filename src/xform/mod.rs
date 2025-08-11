@@ -26,10 +26,13 @@ mod wherepred;
 
 use proc_macro2::TokenStream;
 
-/// Extension trait for determining if an Item can be adapted by c0nst::m0rph
-pub trait Adaptable {
-    /// Returns true if this item type can be processed by c0nst::m0rph
-    fn can_adapt(&self) -> bool;
+/// How an item may be annotated.
+pub trait Annotation {
+    /// Can this item be annotated with `#[c0nst::m0rph]`?
+    fn can_m0rph(&self) -> Result<(), syn::Error>;
+
+    /// Can this item be annotated with `#[c0nst::c0nst]`?
+    fn can_c0nst(&self) -> Result<(), syn::Error>;
 }
 
 /// Target for transformation

@@ -1,13 +1,7 @@
 use proc_macro2::TokenStream;
 use syn::ItemUnion;
 
-use super::{Adaptable, Target, Transform};
-
-impl Adaptable for ItemUnion {
-    fn can_adapt(&self) -> bool {
-        true
-    }
-}
+use super::{Target, Transform};
 
 /// Implementation for ItemUnion
 impl Transform for ItemUnion {

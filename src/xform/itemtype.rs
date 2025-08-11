@@ -1,13 +1,7 @@
 use proc_macro2::TokenStream;
 use syn::ItemType;
 
-use super::{Adaptable, Target, Transform};
-
-impl Adaptable for ItemType {
-    fn can_adapt(&self) -> bool {
-        true
-    }
-}
+use super::{Target, Transform};
 
 /// Implementation for ItemType
 impl Transform for ItemType {

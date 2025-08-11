@@ -29,7 +29,7 @@
 
 #![cfg(test)]
 
-use crate::xform::{Adaptable, Target, Transform};
+use crate::xform::{Annotation, Target, Transform};
 use syn::Item;
 
 #[rstest::rstest]
@@ -254,7 +254,7 @@ fn test_transformations(#[case] input: &str, #[case] nightly: &str, #[case] stab
 fn test_can_adapt(#[case] input: &str, #[case] expected_can_adapt: bool) {
     let item: Item = syn::parse_str(input).expect("Failed to parse input");
     assert_eq!(
-        item.can_adapt(),
+        item.can_m0rph().is_ok(),
         expected_can_adapt,
         "Item type should {} be adaptable: {}",
         if expected_can_adapt { "" } else { "not" },
