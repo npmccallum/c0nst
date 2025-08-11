@@ -2,7 +2,7 @@
 
 [![Crates.io](https://img.shields.io/crates/v/c0nst.svg)](https://crates.io/crates/c0nst)
 [![Documentation](https://docs.rs/c0nst/badge.svg)](https://docs.rs/c0nst)
-[![License](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg)](LICENSE.md)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
 
 A procedural macro that enables library authors to write **const traits once**
 and automatically provides compatibility for both stable and nightly Rust
