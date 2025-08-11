@@ -1,12 +1,27 @@
 //! # c0nst - Conditional Const Syntax Transformation
 //!
-//! Macros that enable the sharing of code between const traits on nightly and
-//! non-const traits on stable. Your code will be annotated to indicate const
-//! behavior. This code will then be transformed based on your compilation
-//! target (stable or nightly).
+//! This crate provides macros that enable the sharing of code between const
+//! traits on nightly and non-const traits on stable. It works like this.
 //!
-//!  * With feature `nightly` enabled, the macro will emit const traits.
-//!  * With feature `nightly` disabled, the macro will emit non-const traits.
+//! 1. You annotate your code with the desired const behavior using the syntax
+//!    provided by this crate.
+//!
+//! 2. When you compile your code, the crate will automatically transform it
+//!    based on your compilation target (stable or nightly). When the `nightly`,
+//!    feature is enabled, the crate will use the new const trait syntax. When
+//!    the `nightly` feature is disabled, it will fall back to the non-const
+//!    trait syntax.
+//!
+//! Therefore, this enables library authors to provide both const and non-const
+//! versions of their traits, depending on the compilation target. This is done
+//! without:
+//!
+//! * additional constraints on library users -- they only ever see Rust syntax
+//! * code duplication -- no need for parallel const and non-const traits
+//!
+//! Besides the main purpose of this crate detailed above, it also isolates you,
+//! the library author, and your users from the churn of nightly syntax changes.
+//! Most nightly changes can be simply absorbed by this crate.
 //!
 //! ## Macros
 //!
@@ -58,8 +73,8 @@
 //! }
 //! ```
 //!
-//! On nightly with `--features nightly`, this becomes native `const trait` syntax.
-//! On stable, the `#[c0nst]` attributes are removed, generating regular (non-const) traits.
+//! With `--features nightly`, this becomes native `const trait` syntax.
+//! Without `--features nightly`, it falls back to regular (non-const) traits.
 
 mod attrs;
 mod tests;
