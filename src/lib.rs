@@ -18,7 +18,7 @@
 //! ```rust
 //! #![cfg_attr(feature = "nightly", feature(const_trait_impl))]
 //!
-//! use c0nst::{c0nst, m0rph};
+//! use c0nst::{c0nst, m0rph, bl0ck};
 //!
 //! // `const trait Default { ... }` => `#[c0nst] trait Default { ... }`
 //! #[c0nst]
@@ -51,10 +51,10 @@
 //! }
 //!
 //! // `T: const Default` => `T: c0nst<Default>`
-//! // `const { ... }` => not supported
+//! // `const { ... }` => `bl0ck! { ... }`
 //! #[m0rph]
 //! pub fn compile_time_default<T: c0nst<Default>>() -> T {
-//!     T::default()
+//!     bl0ck! { T::default() }
 //! }
 //! ```
 //!
@@ -115,4 +115,33 @@ pub fn c0nst(args: TokenStream, input: TokenStream) -> TokenStream {
         Err(err) => err.to_compile_error().into(),
         Ok(()) => m0rph(args, quote! { #[c0nst] #item }.into()),
     }
+}
+
+/// Transforms a block expression based on the target compilation environment.
+///
+/// With feature `nightly` enabled, emits `const { ... }` blocks.
+/// With feature `nightly` disabled, emits regular `{ ... }` blocks.
+///
+/// ## Example
+/// ```rust,ignore
+/// use c0nst::bl0ck;
+///
+/// // This:
+/// bl0ck! { T::default() }
+///
+/// // Becomes on nightly:
+/// const { T::default() }
+///
+/// // Becomes on stable:
+/// { T::default() }
+/// ```
+#[proc_macro]
+pub fn bl0ck(input: TokenStream) -> TokenStream {
+    let input = proc_macro2::TokenStream::from(input);
+
+    #[cfg(feature = "nightly")]
+    return quote! { const { #input } }.into();
+
+    #[cfg(not(feature = "nightly"))]
+    return quote! { { #input } }.into();
 }
