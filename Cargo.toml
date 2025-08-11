@@ -1,0 +1,27 @@
+[package]
+name = "c0nst"
+version = "0.1.0"
+edition = "2021"
+description = "proc-macro for sharing code between const and non-const traits"
+license = "MIT"
+repository = "https://github.com/npmccallum/c0nst"
+documentation = "https://docs.rs/c0nst"
+keywords = ["const", "traits", "nightly", "proc-macro", "compatibility"]
+categories = ["development-tools::procedural-macro-helpers"]
+readme = "README.md"
+authors = ["Nathaniel McCallum <nathaniel@mccallum.life>"]
+rust-version = "1.65"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { version = "2.0", features = ["full"] }
+proc-macro2 = "1.0"
+quote = "1.0"
+
+[dev-dependencies]
+rstest = "0.26"
+
+[features]
+nightly = []
