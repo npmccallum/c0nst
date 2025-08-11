@@ -26,9 +26,9 @@ mod wherepred;
 
 use proc_macro2::TokenStream;
 
-/// Extension trait for determining if an Item can be adapted by c0nst::adapt
+/// Extension trait for determining if an Item can be adapted by c0nst::m0rph
 pub trait Adaptable {
-    /// Returns true if this item type can be processed by c0nst::adapt
+    /// Returns true if this item type can be processed by c0nst::m0rph
     fn can_adapt(&self) -> bool;
 }
 

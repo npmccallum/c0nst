@@ -11,14 +11,14 @@
 //! ## Macros
 //!
 //! - `#[c0nst]` - Transforms item while marking it as const.
-//! - `#[adapt]` - Transforms item without marking it as const.
+//! - `#[m0rph]` - Transforms item without marking it as const.
 //!
 //! ## Example
 //!
 //! ```rust
 //! #![cfg_attr(feature = "nightly", feature(const_trait_impl))]
 //!
-//! use c0nst::{c0nst, adapt};
+//! use c0nst::{c0nst, m0rph};
 //!
 //! // `const trait Default { ... }` => `#[c0nst] trait Default { ... }`
 //! #[c0nst]
@@ -52,7 +52,7 @@
 //!
 //! // `T: const Default` => `T: c0nst<Default>`
 //! // Always requires const implementation
-//! #[adapt]
+//! #[m0rph]
 //! pub fn compile_time_default<T: c0nst<Default>>() -> T {
 //!     T::default()
 //! }
@@ -85,7 +85,7 @@ use xform::{Adaptable, Target, Transform};
 /// - `T: c0nst<Trait>` - Unconditionally const
 /// - `T: ?c0nst<Trait>` - Conditionally const
 #[proc_macro_attribute]
-pub fn adapt(_args: TokenStream, input: TokenStream) -> TokenStream {
+pub fn m0rph(_args: TokenStream, input: TokenStream) -> TokenStream {
     let item = parse_macro_input!(input as Item);
 
     // Check if the item can be adapted using the extension trait
@@ -93,7 +93,7 @@ pub fn adapt(_args: TokenStream, input: TokenStream) -> TokenStream {
         return item.transform(Target::default()).into();
     }
 
-    syn::Error::new_spanned(&item, "cannot adapt in this context")
+    syn::Error::new_spanned(&item, "cannot morph in this context")
         .to_compile_error()
         .into()
 }
@@ -116,5 +116,5 @@ pub fn adapt(_args: TokenStream, input: TokenStream) -> TokenStream {
 pub fn c0nst(args: TokenStream, input: TokenStream) -> TokenStream {
     let input: proc_macro2::TokenStream = input.into();
     let input = quote! { #[c0nst] #input };
-    adapt(args, input.into())
+    m0rph(args, input.into())
 }
