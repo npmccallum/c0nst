@@ -237,7 +237,7 @@ use syn::Item;
     "fn test<'a, 'b>() where 'a: 'b {}",
     "fn test<'a, 'b>() where 'a: 'b {}"
 )]
-
+#[case::mod_without_content("mod empty;", "mod empty;", "mod empty;")]
 fn test_transformations(#[case] input: &str, #[case] nightly: &str, #[case] stable: &str) {
     let nightly = nightly.replace(&[' ', '\n', '\t'][..], "");
     let stable = stable.replace(&[' ', '\n', '\t'][..], "");
