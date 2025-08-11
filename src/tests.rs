@@ -33,7 +33,6 @@ use crate::xform::{Adaptable, Target, Transform};
 use syn::Item;
 
 #[rstest::rstest]
-// Basic item transformations with #[c0nst] attribute
 #[case::basic_items(
     "#[c0nst] fn test() -> i32 { 42 }",
     "const fn test() -> i32 { 42 }",
@@ -49,19 +48,16 @@ use syn::Item;
     "impl const MyTrait for MyType { fn method(&self) -> i32 { 42 } }",
     "impl MyTrait for MyType { fn method(&self) -> i32 { 42 } }"
 )]
-// Wrapper trait transformations - all patterns in one comprehensive test
 #[case::comprehensive_wrapper_traits(
-        "#[c0nst] fn test<T: c0nst<Clone> + ?c0nst<Send> + c0nst<From<u64>>>() -> T where T: c0nst<Default> { T::default() }",
-        "const fn test<T: const Clone + [const] Send + const From<u64>>() -> T where T: const Default { T::default() }",
-        "fn test<T: Clone + Send + From<u64>>() -> T where T: Default { T::default() }"
-    )]
-// Complex scenarios combining multiple features
+    "#[c0nst] fn test<T: c0nst<Clone> + ?c0nst<Send> + c0nst<From<u64>>>() -> T where T: c0nst<Default> { T::default() }",
+    "const fn test<T: const Clone + [const] Send + const From<u64>>() -> T where T: const Default { T::default() }",
+    "fn test<T: Clone + Send + From<u64>>() -> T where T: Default { T::default() }"
+)]
 #[case::complex_with_modifiers(
-        "#[derive(Debug)] #[c0nst] pub unsafe fn test<'a, const N: usize, T: Clone + c0nst<Send>>() -> Result<T, String> where T: c0nst<Default> { Ok(T::default()) }",
-        "#[derive(Debug)] pub const unsafe fn test<'a, const N: usize, T: Clone + const Send>() -> Result<T, String> where T: const Default { Ok(T::default()) }",
-        "#[derive(Debug)] pub unsafe fn test<'a, const N: usize, T: Clone + Send>() -> Result<T, String> where T: Default { Ok(T::default()) }"
-    )]
-// Trait and impl method transformations
+    "#[derive(Debug)] #[c0nst] pub unsafe fn test<'a, const N: usize, T: Clone + c0nst<Send>>() -> Result<T, String> where T: c0nst<Default> { Ok(T::default()) }",
+    "#[derive(Debug)] pub const unsafe fn test<'a, const N: usize, T: Clone + const Send>() -> Result<T, String> where T: const Default { Ok(T::default()) }",
+    "#[derive(Debug)] pub unsafe fn test<'a, const N: usize, T: Clone + Send>() -> Result<T, String> where T: Default { Ok(T::default()) }"
+)]
 #[case::trait_methods(
     "trait MyTrait { #[c0nst] fn method(&self) -> i32 { 42 } }",
     "trait MyTrait { const fn method(&self) -> i32 { 42 } }",
@@ -72,42 +68,36 @@ use syn::Item;
     "impl MyTrait for i32 { const fn method(&self) -> i32 { 42 } }",
     "impl MyTrait for i32 { fn method(&self) -> i32 { 42 } }"
 )]
-// Generic implementations with where clauses
 #[case::generic_impl_comprehensive(
-        "#[c0nst] impl<T: c0nst<Clone>> From<T> for MyType<T> where T: ?c0nst<Send> { fn from(t: T) -> Self { MyType(t) } }",
-        "impl<T: const Clone> where T: [const] Send const From<T> for MyType<T> { fn from(t: T) -> Self { MyType(t) } }",
-        "impl<T: Clone> where T: Send From<T> for MyType<T> { fn from(t: T) -> Self { MyType(t) } }"
-    )]
-// Struct definitions with comprehensive bounds
+    "#[c0nst] impl<T: c0nst<Clone>> From<T> for MyType<T> where T: ?c0nst<Send> { fn from(t: T) -> Self { MyType(t) } }",
+    "impl<T: const Clone> where T: [const] Send const From<T> for MyType<T> { fn from(t: T) -> Self { MyType(t) } }",
+    "impl<T: Clone> where T: Send From<T> for MyType<T> { fn from(t: T) -> Self { MyType(t) } }"
+)]
 #[case::struct_comprehensive(
-        "struct MyStruct<T: Clone + c0nst<Send>, U: ?c0nst<Sync>> where T: c0nst<Default> { t: T, u: U }",
-        "struct MyStruct<T: Clone + const Send, U: [const] Sync> where T: const Default { t: T, u: U }",
-        "struct MyStruct<T: Clone + Send, U: Sync> where T: Default { t: T, u: U }"
-    )]
+    "struct MyStruct<T: Clone + c0nst<Send>, U: ?c0nst<Sync>> where T: c0nst<Default> { t: T, u: U }",
+    "struct MyStruct<T: Clone + const Send, U: [const] Sync> where T: const Default { t: T, u: U }",
+    "struct MyStruct<T: Clone + Send, U: Sync> where T: Default { t: T, u: U }"
+)]
 #[case::tuple_struct(
     "struct MyStruct<T: c0nst<Clone>>(T);",
     "struct MyStruct<T: const Clone>(T);",
     "struct MyStruct<T: Clone>(T);"
 )]
-// Enum with comprehensive bounds testing
 #[case::enum_comprehensive(
     "enum MyEnum<T: c0nst<Clone> + ?c0nst<Send>> where T: c0nst<Default> { Variant(T), Other }",
     "enum MyEnum<T: const Clone + [const] Send> where T: const Default { Variant(T), Other }",
     "enum MyEnum<T: Clone + Send> where T: Default { Variant(T), Other }"
 )]
-// Union with bounds
 #[case::union_with_bounds(
     "union MyUnion<T: c0nst<Copy>> where T: c0nst<Clone> { field: T }",
     "union MyUnion<T: const Copy> where T: const Clone { field: T }",
     "union MyUnion<T: Copy> where T: Clone { field: T }"
 )]
-// Type aliases
 #[case::type_alias_comprehensive(
     "type MyType<T: c0nst<Clone> + ?c0nst<Send>> where T: c0nst<Default> = Vec<T>;",
     "type MyType<T: const Clone + [const] Send> where T: const Default = Vec<T>;",
     "type MyType<T: Clone + Send> where T: Default = Vec<T>;"
 )]
-// Error cases and edge conditions
 #[case::invalid_c0nst_patterns(
     "fn test<T: c0nst>() {}",
     "fn test<T: c0nst>() {}",
@@ -118,19 +108,16 @@ use syn::Item;
     "fn test<T: const Clone>() {}",
     "fn test<T: Clone>() {}"
 )]
-// Special modifier combinations
 #[case::async_const_ordering(
     "#[c0nst] async fn test() -> i32 { 42 }",
     "const async fn test() -> i32 { 42 }",
     "async fn test() -> i32 { 42 }"
 )]
-// Doc comments preservation
 #[case::doc_comments(
     "/// Documentation\n#[c0nst] fn test() -> i32 { 42 }",
     "#[doc = \"Documentation\"] const fn test() -> i32 { 42 }",
     "#[doc = \"Documentation\"] fn test() -> i32 { 42 }"
 )]
-// Unsupported item types (should pass through unchanged)
 #[case::unsupported_const_item(
     "const MY_CONST: i32 = 42;",
     "const MY_CONST: i32 = 42;",
@@ -161,31 +148,26 @@ use syn::Item;
     "mod my_module { fn test() {} }",
     "mod my_module { fn test() {} }"
 )]
-// Non-function impl items (should pass through unchanged)
 #[case::impl_item_type_alias(
     "impl MyTrait for MyType { type AssocType = i32; }",
     "impl MyTrait for MyType { type AssocType = i32; }",
     "impl MyTrait for MyType { type AssocType = i32; }"
 )]
-// Non-function trait items (should pass through unchanged)
 #[case::trait_item_type_alias(
     "trait MyTrait { type AssocType; }",
     "trait MyTrait { type AssocType; }",
     "trait MyTrait { type AssocType; }"
 )]
-// Trait method with default implementation and c0nst
 #[case::trait_method_with_default(
     "trait MyTrait { #[c0nst] fn method(&self) -> i32 { 42 } }",
     "trait MyTrait { const fn method(&self) -> i32 { 42 } }",
     "trait MyTrait { fn method(&self) -> i32 { 42 } }"
 )]
-// Lifetime bounds (should pass through unchanged)
 #[case::lifetime_bounds(
     "fn test<'a, T: 'a>() where T: 'a {}",
     "fn test<'a, T: 'a>() where T: 'a {}",
     "fn test<'a, T: 'a>() where T: 'a {}"
 )]
-// Invalid c0nst patterns that should pass through
 #[case::invalid_c0nst_bare(
     "fn test<T: c0nst>() {}",
     "fn test<T: c0nst>() {}",
@@ -201,37 +183,26 @@ use syn::Item;
     "fn test<T: c0nst<>>() {}",
     "fn test<T: c0nst<>>() {}"
 )]
-// Multi-segment paths (should pass through unchanged)
 #[case::multi_segment_path(
     "fn test<T: std::marker::Send>() {}",
     "fn test<T: std::marker::Send>() {}",
     "fn test<T: std::marker::Send>() {}"
 )]
-// Traits with no supertraits
-#[case::trait_no_supertraits(
-    "trait MyTrait { fn method(&self); }",
-    "trait MyTrait { fn method(&self); }",
-    "trait MyTrait { fn method(&self); }"
-)]
-// Traits with supertraits
 #[case::trait_with_supertraits(
     "trait MyTrait: Clone + Send { fn method(&self); }",
     "trait MyTrait: Clone + Send { fn method(&self); }",
     "trait MyTrait: Clone + Send { fn method(&self); }"
 )]
-// Single where predicate
 #[case::single_where_predicate(
     "struct MyStruct<T> where T: Clone { field: T }",
     "struct MyStruct<T> where T: Clone { field: T }",
     "struct MyStruct<T> where T: Clone { field: T }"
 )]
-// Multiple where predicates
 #[case::multiple_where_predicates(
     "struct MyStruct<T, U> where T: Clone, U: Send { t: T, u: U }",
     "struct MyStruct<T, U> where T: Clone, U: Send { t: T, u: U }",
     "struct MyStruct<T, U> where T: Clone, U: Send { t: T, u: U }"
 )]
-// Lifetime where predicates
 #[case::lifetime_where_predicates(
     "fn test<'a, 'b>() where 'a: 'b {}",
     "fn test<'a, 'b>() where 'a: 'b {}",
