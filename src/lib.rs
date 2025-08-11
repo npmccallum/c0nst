@@ -77,12 +77,12 @@ use xform::{Annotation, Target, Transform};
 /// disabled, transforms the item to use regular (non-const) traits.
 ///
 /// This is useful when you want to transform types that have inner markings
-/// but are not themselves const.
+/// but are not themselves const. For example, you might have a function,
+/// struct or module which contains const bounds, but is not, itself, const.
 ///
 /// ## Supported Items
-/// - Traits, implementations, functions
-/// - Structs, enums, unions, type aliases
-/// - Modules (transforms all contained `#[c0nst]` items)
+/// - traits, implementation blocks, functions (same as `#[c0nst]`)
+/// - structs, enums, unions, type aliases, modules
 ///
 /// ## Conditional Bounds
 /// - `T: c0nst<Trait>` - Unconditionally const
@@ -103,7 +103,7 @@ pub fn m0rph(_args: TokenStream, input: TokenStream) -> TokenStream {
 /// disabled, transforms the item to use regular (non-const) traits.
 ///
 /// ## Supported Items
-/// - Traits, implementations, functions
+/// - traits, implementation blocks, functions
 ///
 /// ## Conditional Bounds
 /// - `T: c0nst<Trait>` - Unconditionally const (i.e. `const`)
