@@ -90,12 +90,12 @@ pub fn adapt(_args: TokenStream, input: TokenStream) -> TokenStream {
 
     // Check if the item can be adapted using the extension trait
     if item.can_adapt() {
-        item.transform(Target::default()).into()
-    } else {
-        syn::Error::new_spanned(&item, "cannot adapt in this context")
-            .to_compile_error()
-            .into()
+        return item.transform(Target::default()).into();
     }
+
+    syn::Error::new_spanned(&item, "cannot adapt in this context")
+        .to_compile_error()
+        .into()
 }
 
 /// Transforms an item while marking it as const.
