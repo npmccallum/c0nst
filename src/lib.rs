@@ -113,24 +113,8 @@ pub fn adapt(_args: TokenStream, input: TokenStream) -> TokenStream {
 /// - `T: c0nst<Trait>` - Unconditionally const
 /// - `T: ?c0nst<Trait>` - Conditionally const
 #[proc_macro_attribute]
-pub fn c0nst(_args: TokenStream, input: TokenStream) -> TokenStream {
-    let item = parse_macro_input!(input as Item);
-
-    // Create a new item with #[c0nst] attribute prepended
-    let c0nst_attr = quote! { #[c0nst] };
-    let item_with_attr = quote! {
-        #c0nst_attr
-        #item
-    };
-
-    // Parse the new item and transform it
-    let new_item: Item = syn::parse2(item_with_attr).unwrap();
-
-    if new_item.can_adapt() {
-        new_item.transform(Target::default()).into()
-    } else {
-        syn::Error::new_spanned(&new_item, "cannot adapt in this context")
-            .to_compile_error()
-            .into()
-    }
+pub fn c0nst(args: TokenStream, input: TokenStream) -> TokenStream {
+    let input: proc_macro2::TokenStream = input.into();
+    let input = quote! { #[c0nst] #input };
+    adapt(args, input.into())
 }
