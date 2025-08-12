@@ -1,162 +1,79 @@
 //! # c0nst - Conditional Const Syntax Transformation
 //!
-//! This crate provides macros that enable the sharing of code between const
-//! traits on nightly and non-const traits on stable. It works like this.
+//! This crate enables the sharing of code between const traits on nightly and
+//! non-const traits on stable. It is small and lightweight. It works on a very
+//! simple principle: everywhere you want to use const on nightly but not on
+//! stable, just use the keyword `c0nst` instead of `const`. That's it!
 //!
-//! 1. You annotate your code with the desired const behavior using the syntax
-//!    provided by this crate.
-//!
-//! 2. When you compile your code, the crate will automatically transform it
-//!    based on your compilation target (stable or nightly). When the `nightly`,
-//!    feature is enabled, the crate will use the new const trait syntax. When
-//!    the `nightly` feature is disabled, it will fall back to the non-const
-//!    trait syntax.
-//!
-//! Therefore, this enables library authors to provide both const and non-const
-//! versions of their traits, depending on the compilation target. This is done
-//! without:
-//!
-//! * additional constraints on library users -- they only ever see Rust syntax
-//! * code duplication -- no need for parallel const and non-const traits
-//!
-//! Besides the main purpose of this crate detailed above, it also isolates you,
-//! the library author, and your users from the churn of nightly syntax changes.
-//! Most nightly changes can be simply absorbed by this crate.
-//!
-//! ## Macros
-//!
-//! - `#[c0nst]` - Transforms item while marking it as const.
-//! - `#[m0rph]` - Transforms item without marking it as const.
+//! When the new `const` syntax is stabilized, you can convert the `c0nst`
+//! keyword to `const` (`s/c0nst/const/g`) and remove the use of this crate.
 //!
 //! ## Example
+//!
+//! This is the canonical example of using the `c0nst` crate, [derived from the
+//! RFC][rfc]. This ensures we can do everything designed by the RFC.
+//!
+//! [rfc]: https://github.com/rust-lang/rust/issues/143874
 //!
 //! ```rust
 //! #![cfg_attr(feature = "nightly", feature(const_trait_impl))]
 //!
-//! use c0nst::{c0nst, m0rph, bl0ck};
+//! c0nst::c0nst! {
+//!     pub c0nst trait Default {
+//!         fn default() -> Self;
+//!     }
 //!
-//! // `const trait Default { ... }` => `#[c0nst] trait Default { ... }`
-//! #[c0nst]
-//! pub trait Default {
-//!     fn default() -> Self;
-//! }
+//!     impl c0nst Default for () {
+//!         fn default() -> Self {}
+//!     }
 //!
-//! // `impl const Default for () { ... }` => `#[c0nst] impl Default for () { ... }`
-//! #[c0nst]
-//! impl Default for () {
-//!     fn default() -> Self {}
-//! }
+//!     pub struct Thing<T>(pub T);
 //!
-//! pub struct Thing<T>(pub T);
+//!     impl<T: [c0nst] Default> c0nst Default for Thing<T> {
+//!         fn default() -> Self {
+//!             Self(T::default())
+//!         }
+//!     }
 //!
-//! // `impl<...> const Default for ...` => `#[c0nst] impl<...> Default for ...`
-//! // `T: [const] Default` => `T: ?c0nst<Default>`
-//! #[c0nst]
-//! impl<T: ?c0nst<Default>> Default for Thing<T> {
-//!     fn default() -> Self {
-//!         Self(T::default())
+//!     pub c0nst fn default<T: [c0nst] Default>() -> T {
+//!         T::default()
+//!     }
+//!
+//!     pub fn compile_time_default<T: c0nst Default>() -> T {
+//!         c0nst { T::default() }
 //!     }
 //! }
-//!
-//! // `const fn default<...>() ...` => `#[c0nst] fn default<...>() ...`
-//! // `T: [const] Default` => `T: ?c0nst<Default>`
-//! #[c0nst]
-//! pub fn default<T: ?c0nst<Default>>() -> T {
-//!     T::default()
-//! }
-//!
-//! // `T: const Default` => `T: c0nst<Default>`
-//! // `const { ... }` => `bl0ck! { ... }`
-//! #[m0rph]
-//! pub fn compile_time_default<T: c0nst<Default>>() -> T {
-//!     bl0ck! { T::default() }
-//! }
 //! ```
-//!
-//! With `--features nightly`, this becomes native `const trait` syntax.
-//! Without `--features nightly`, it falls back to regular (non-const) traits.
 
-mod attrs;
+mod convert;
 mod tests;
-mod xform;
 
 use proc_macro::TokenStream;
-use quote::quote;
-use syn::{parse_macro_input, Item};
-use xform::{Annotation, Target, Transform};
 
-/// Transforms an item without marking it as const.
-///
-/// With feature `nightly` enabled, transforms the item by resolving all
-/// annotations to the nightly const trait syntax. With feature `nightly`
-/// disabled, transforms the item to use regular (non-const) traits.
-///
-/// This is useful when you want to transform types that have inner markings
-/// but are not themselves const. For example, you might have a function,
-/// struct or module which contains const bounds, but is not, itself, const.
-///
-/// ## Supported Items
-/// - traits, implementation blocks, functions (same as `#[c0nst]`)
-/// - structs, enums, unions, type aliases, modules
-///
-/// ## Conditional Bounds
-/// - `T: c0nst<Trait>` - Unconditionally const
-/// - `T: ?c0nst<Trait>` - Conditionally const
-#[proc_macro_attribute]
-pub fn m0rph(_args: TokenStream, input: TokenStream) -> TokenStream {
-    let item = parse_macro_input!(input as Item);
-    match item.can_m0rph() {
-        Err(err) => err.to_compile_error().into(),
-        Ok(()) => item.transform(Target::default()).into(),
-    }
+use crate::convert::Convert;
+
+/// Target compilation environment
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[allow(dead_code)]
+enum Target {
+    /// Stable Rust - remove const syntax
+    #[cfg_attr(not(feature = "nightly"), default)]
+    Stable,
+
+    /// Nightly Rust - use modern const syntax
+    #[cfg_attr(feature = "nightly", default)]
+    Nightly,
 }
 
-/// Transforms an item while marking it as const.
+/// Emits conditionally const code.
 ///
-/// With feature `nightly` enabled, transforms the item by resolving all
-/// annotations to the nightly const trait syntax. With feature `nightly`
-/// disabled, transforms the item to use regular (non-const) traits.
+/// On `feature = "nightly"`, it will convert `c0nst` to `const`.
+/// Otherwise, it will remove `c0nst` and `[c0nst]` syntax.
 ///
-/// ## Supported Items
-/// - traits, implementation blocks, functions
-///
-/// ## Conditional Bounds
-/// - `T: c0nst<Trait>` - Unconditionally const (i.e. `const`)
-/// - `T: ?c0nst<Trait>` - Conditionally const (i.e. `[const]`)
-#[proc_macro_attribute]
-pub fn c0nst(args: TokenStream, input: TokenStream) -> TokenStream {
-    let item = parse_macro_input!(input as Item);
-    match item.can_c0nst() {
-        Err(err) => err.to_compile_error().into(),
-        Ok(()) => m0rph(args, quote! { #[c0nst] #item }.into()),
-    }
-}
-
-/// Transforms a block expression based on the target compilation environment.
-///
-/// With feature `nightly` enabled, emits `const { ... }` blocks.
-/// With feature `nightly` disabled, emits regular `{ ... }` blocks.
-///
-/// ## Example
-/// ```rust,ignore
-/// use c0nst::bl0ck;
-///
-/// // This:
-/// bl0ck! { T::default() }
-///
-/// // Becomes on nightly:
-/// const { T::default() }
-///
-/// // Becomes on stable:
-/// { T::default() }
-/// ```
+/// Nothing more. Nothing less.
 #[proc_macro]
-pub fn bl0ck(input: TokenStream) -> TokenStream {
-    let input = proc_macro2::TokenStream::from(input);
-
-    #[cfg(feature = "nightly")]
-    return quote! { const { #input } }.into();
-
-    #[cfg(not(feature = "nightly"))]
-    return quote! { { #input } }.into();
+pub fn c0nst(input: TokenStream) -> TokenStream {
+    proc_macro2::TokenStream::from(input)
+        .convert(Target::default())
+        .into()
 }
