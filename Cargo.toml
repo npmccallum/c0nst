@@ -11,7 +11,7 @@ keywords = ["const", "traits", "nightly", "proc-macro", "compatibility"]
 categories = ["development-tools::procedural-macro-helpers"]
 readme = "README.md"
 authors = ["Nathaniel McCallum <nathaniel@mccallum.life>"]
-rust-version = "1.70"
+rust-version = "1.63"
 exclude = [
     ".github/",
     "target/"
