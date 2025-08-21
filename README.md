@@ -30,7 +30,7 @@ c0nst::c0nst! {
 
 ```toml
 [dependencies]
-c0nst = "0.1"
+c0nst = "0.2"
 
 [features]
 nightly = ["c0nst/nightly"]
