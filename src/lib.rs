@@ -44,6 +44,37 @@
 //!     }
 //! }
 //! ```
+//!
+//! ## Destruct Trait Support
+//!
+//! The macro provides special handling for the `Destruct` trait, which is
+//! required in some const contexts. The `Destruct` trait references are
+//! automatically resolved to the fully qualified path `core::marker::Destruct`
+//! on nightly and removed entirely on stable:
+//!
+//! ```rust
+//! #![cfg_attr(feature = "nightly", feature(const_trait_impl, const_destruct))]
+//!
+//! c0nst::c0nst! {
+//!     c0nst trait MyTrait {
+//!         // nightly → `type: Item: const core::marker::Destruct;`
+//!         // stable → `type: Item;`
+//!         type Item: c0nst Destruct;
+//!     }
+//!
+//!     c0nst trait OtherTrait {
+//!         // nightly → `type: Item: [const] core::marker::Destruct;`
+//!         // stable → `type: Item;`
+//!         type Item: [c0nst] Destruct;
+//!     }
+//!
+//!     c0nst trait ComplexTrait {
+//!         // nightly → `type: Item: const Clone + const core::marker::Destruct;`
+//!         // stable → `type: Item: Clone;`
+//!         type Item: Clone + c0nst Destruct;
+//!     }
+//! }
+//! ```
 
 mod convert;
 mod tests;
@@ -69,6 +100,10 @@ enum Target {
 ///
 /// On `feature = "nightly"`, it will convert `c0nst` to `const`.
 /// Otherwise, it will remove `c0nst` and `[c0nst]` syntax.
+///
+/// The macro also provides special handling for `Destruct` trait references:
+/// - `c0nst Destruct` becomes `const core::marker::Destruct` (nightly) or is removed (stable)
+/// - `[c0nst] Destruct` becomes `[const] core::marker::Destruct` (nightly) or is removed (stable)
 ///
 /// Nothing more. Nothing less.
 #[proc_macro]

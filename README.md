@@ -56,6 +56,7 @@ const traits or stable compatibility.
 - **Lightweight** - Single proc-macro, minimal dependencies
 - **Comprehensive** - Handles all syntax from the
   [RFC](https://github.com/rust-lang/rust/issues/143874)
+- **Destruct support** - Automatically resolves `Destruct` trait references
 
 ## For Library Authors
 

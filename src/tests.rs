@@ -462,6 +462,46 @@ use crate::{Convert, Target};
     "type NestedImpl = Box<dyn Fn() -> impl Iterator<Item = impl Clone>>;"
 )]
 #[case::const_block("c0nst { 32 }", "const { 32 }", "{ 32 }")]
+#[case::const_destruct(
+    "c0nst trait MyTrait { type Foo: c0nst Destruct; }",
+    "const trait MyTrait { type Foo: const core::marker::Destruct; }",
+    "trait MyTrait { type Foo; }"
+)]
+#[case::maybe_const_destruct(
+    "c0nst trait MyTrait { type Foo: [c0nst] Destruct; }",
+    "const trait MyTrait { type Foo: [const] core::marker::Destruct; }",
+    "trait MyTrait { type Foo; }"
+)]
+#[case::trailing_const_destruct(
+    "c0nst trait MyTrait { type Foo: Clone + c0nst Destruct; }",
+    "const trait MyTrait { type Foo: Clone + const core::marker::Destruct; }",
+    "trait MyTrait { type Foo: Clone; }"
+)]
+#[case::trailing_maybe_const_destruct(
+    "c0nst trait MyTrait { type Foo: Clone + [c0nst] Destruct; }",
+    "const trait MyTrait { type Foo: Clone + [const] core::marker::Destruct; }",
+    "trait MyTrait { type Foo: Clone; }"
+)]
+#[case::destruct_bound_single(
+    "impl<T: [c0nst] Destruct> MyTrait for T {}",
+    "impl<T: [const] core::marker::Destruct> MyTrait for T {}",
+    "impl<T> MyTrait for T {}"
+)]
+#[case::destruct_bound_multiple_first(
+    "impl<T: [c0nst] Destruct + Clone + Copy> MyTrait for T {}",
+    "impl<T: [const] core::marker::Destruct + Clone + Copy> MyTrait for T {}",
+    "impl<T: Clone + Copy> MyTrait for T {}"
+)]
+#[case::destruct_bound_multiple_middle(
+    "impl<T: Copy + [c0nst] Destruct + Clone> MyTrait for T {}",
+    "impl<T: Copy + [const] core::marker::Destruct + Clone> MyTrait for T {}",
+    "impl<T: Copy + Clone> MyTrait for T {}"
+)]
+#[case::destruct_bound_multiple_end(
+    "impl<T: Clone + Copy + [c0nst] Destruct> MyTrait for T {}",
+    "impl<T: Clone + Copy + [const] core::marker::Destruct> MyTrait for T {}",
+    "impl<T: Clone + Copy> MyTrait for T {}"
+)]
 fn test_transformations(
     #[case] input: &str,
     #[case] nightly_expected: &str,
