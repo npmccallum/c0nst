@@ -13,7 +13,7 @@ dependencies = [
 
 [[package]]
 name = "c0nst"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "proc-macro2",
  "rstest",
