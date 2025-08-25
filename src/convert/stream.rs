@@ -2,7 +2,7 @@ use proc_macro2::{Group, TokenStream, TokenTree};
 
 use super::rule::Rule;
 use super::subslice::Subslice;
-use crate::Target;
+use super::Target;
 
 impl super::Convert for TokenStream {
     type Output = TokenStream;

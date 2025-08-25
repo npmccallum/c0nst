@@ -81,20 +81,7 @@ mod tests;
 
 use proc_macro::TokenStream;
 
-use crate::convert::Convert;
-
-/// Target compilation environment
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-#[allow(dead_code)]
-enum Target {
-    /// Stable Rust - remove const syntax
-    #[cfg_attr(not(feature = "nightly"), default)]
-    Stable,
-
-    /// Nightly Rust - use modern const syntax
-    #[cfg_attr(feature = "nightly", default)]
-    Nightly,
-}
+use crate::convert::{Convert, Target};
 
 /// Emits conditionally const code.
 ///
