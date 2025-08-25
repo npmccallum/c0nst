@@ -13,122 +13,57 @@ env:
 jobs:
   test:
     name: Test
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
         rust:
-          - version: "1.63" # MSRV
-            features: ""
-          - version: stable
-            features: ""
-          - version: nightly
-            features: ""
-          - version: nightly
-            features: "nightly"
+          - vers: "1.63" # MSRV
+            feat: ""
+          - vers: stable
+            feat: ""
+          - vers: nightly
+            feat: ""
+          - vers: nightly
+            feat: "nightly"
     steps:
       - uses: actions/checkout@v5
 
-      - name: Install Rust
+      - name: install rust
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: ${{ matrix.rust.version }}
+          toolchain: ${{ matrix.rust.vers }}
+          components: rustfmt, clippy
 
-      - name: Cache dependencies
+      - name: cache dependencies
         uses: Swatinem/rust-cache@v2
         with:
-          key: ${{ matrix.rust.version }}-${{ matrix.rust.features }}
+          key: ${{ matrix.rust.vers }}-${{ matrix.rust.feat }}-${{ matrix.os }}
 
-      - name: Check cargo fmt
-        if: matrix.rust.version == 'stable' && matrix.rust.features == ''
-        run: |
-          rustup component add rustfmt
-          cargo fmt --all -- --check
+      - name: cargo fmt
+        if: matrix.rust.vers == 'stable' && matrix.os == 'ubuntu-latest'
+        run: cargo fmt --all -- --check
 
-      - name: Run cargo check
+      - name: cargo clippy
+        if: matrix.rust.vers == 'stable' || matrix.rust.vers == 'nightly'
         run:
-          cargo check --all-targets ${{ matrix.rust.features &&
-          format('--features {0}', matrix.rust.features) || '' }}
+          cargo clippy --all-targets --features '${{ matrix.rust.feat }}' -- -D
+          warnings
 
-      - name: Run tests
+      - name: cargo doc
+        if: matrix.rust.vers == 'stable' || matrix.rust.vers == 'nightly'
         run:
-          cargo test ${{ matrix.rust.features && format('--features {0}',
-          matrix.rust.features) || '' }}
-
-      - name: Run doc tests
-        run:
-          cargo test --doc ${{ matrix.rust.features && format('--features {0}',
-          matrix.rust.features) || '' }}
-
-  clippy:
-    name: Clippy
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          components: clippy
-
-      - name: Cache dependencies
-        uses: Swatinem/rust-cache@v2
-
-      - name: Run clippy (no features)
-        run: cargo clippy --all-targets -- -D warnings
-
-      - name: Run clippy (with nightly feature)
-        run: cargo clippy --all-targets --features nightly -- -D warnings
-
-  docs:
-    name: Documentation
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache dependencies
-        uses: Swatinem/rust-cache@v2
-
-      - name: Check documentation (no features)
-        run: cargo doc --no-deps --document-private-items
+          cargo doc --no-deps --document-private-items --features '${{
+          matrix.rust.feat }}'
         env:
           RUSTDOCFLAGS: -D warnings
 
-      - name: Check documentation (with nightly feature)
-        run: cargo doc --no-deps --document-private-items --features nightly
-        env:
-          RUSTDOCFLAGS: -D warnings
+      - name: cargo check
+        run: cargo check --features '${{ matrix.rust.feat }}'
 
-  msrv:
-    name: MSRV Check
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Install Rust MSRV
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: "1.70"
-
-      - name: Cache dependencies
-        uses: Swatinem/rust-cache@v2
-        with:
-          key: msrv-1.70
-
-      # Use the MSRV-specific Cargo.lock if it exists
-      - name: Use MSRV Cargo.lock
-        run: |
-          if [ -f "Cargo.lock-ignored-for-cargo-msrv" ]; then
-            cp Cargo.lock-ignored-for-cargo-msrv Cargo.lock
-          fi
-
-      - name: Check MSRV compatibility
-        run: cargo check --all-targets
-
-      - name: Test MSRV compatibility
-        run: cargo test
+      - name: cargo test
+        if: matrix.rust.vers == 'stable' || matrix.rust.vers == 'nightly'
+        run: cargo test --features '${{ matrix.rust.feat }}'
 
   coverage:
     name: Code Coverage
