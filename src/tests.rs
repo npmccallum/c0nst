@@ -20,8 +20,8 @@ use crate::{Convert, Target};
     "trait MyTrait { fn method(&self) -> i32; }"
 )]
 #[case::basic_impl(
-    "impl c0nst MyTrait for MyType { fn method(&self) -> i32 { 42 } }",
-    "impl const MyTrait for MyType { fn method(&self) -> i32 { 42 } }",
+    "c0nst impl MyTrait for MyType { fn method(&self) -> i32 { 42 } }",
+    "const impl MyTrait for MyType { fn method(&self) -> i32 { 42 } }",
     "impl MyTrait for MyType { fn method(&self) -> i32 { 42 } }"
 )]
 #[case::comprehensive_wrapper_traits(
@@ -35,8 +35,8 @@ use crate::{Convert, Target};
     "type Callback = fn(impl Send + Sync);"
 )]
 #[case::impl_self_type(
-    "impl c0nst Clone for MyType { fn clone(&self) -> Self { todo!() } }",
-    "impl const Clone for MyType { fn clone(&self) -> Self { todo!() } }",
+    "c0nst impl Clone for MyType { fn clone(&self) -> Self { todo!() } }",
+    "const impl Clone for MyType { fn clone(&self) -> Self { todo!() } }",
     "impl Clone for MyType { fn clone(&self) -> Self { todo!() } }"
 )]
 #[case::array_types(
@@ -105,8 +105,8 @@ use crate::{Convert, Target};
     "type NamedFn = fn(x: impl Send, y: &dyn Sync) -> i32;"
 )]
 #[case::impl_without_trait(
-    "impl c0nst MyStruct { fn new() -> Self { todo!() } }",
-    "impl const MyStruct { fn new() -> Self { todo!() } }",
+    "c0nst impl MyStruct { fn new() -> Self { todo!() } }",
+    "const impl MyStruct { fn new() -> Self { todo!() } }",
     "impl MyStruct { fn new() -> Self { todo!() } }"
 )]
 #[case::impl_with_negative_trait(
@@ -135,8 +135,8 @@ use crate::{Convert, Target};
     "impl MyTrait for i32 { fn method(&self) -> i32 { 42 } }"
 )]
 #[case::generic_impl_comprehensive(
-    "impl<T: c0nst Clone> c0nst From<T> for MyType<T> where T: [c0nst] Send { fn from(t: T) -> Self { MyType(t) } }",
-    "impl<T: const Clone> const From<T> for MyType<T> where T: [const] Send { fn from(t: T) -> Self { MyType(t) } }",
+    "c0nst impl<T: c0nst Clone> From<T> for MyType<T> where T: [c0nst] Send { fn from(t: T) -> Self { MyType(t) } }",
+    "const impl<T: const Clone> From<T> for MyType<T> where T: [const] Send { fn from(t: T) -> Self { MyType(t) } }",
     "impl<T: Clone> From<T> for MyType<T> where T: Send { fn from(t: T) -> Self { MyType(t) } }"
 )]
 #[case::struct_comprehensive(

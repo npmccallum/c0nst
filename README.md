@@ -16,7 +16,7 @@ c0nst::c0nst! {
         fn default() -> Self;
     }
 
-    impl c0nst Default for () {
+    c0nst impl Default for () {
         fn default() -> Self {}
     }
 
@@ -81,7 +81,7 @@ c0nst::c0nst! {
         fn calculate(&self) -> u32;
     }
 
-    impl c0nst Compute for u32 {
+    c0nst impl Compute for u32 {
         fn calculate(&self) -> u32 { *self * 2 }
     }
 }

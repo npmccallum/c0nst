@@ -23,13 +23,13 @@
 //!         fn default() -> Self;
 //!     }
 //!
-//!     impl c0nst Default for () {
+//!     c0nst impl Default for () {
 //!         fn default() -> Self {}
 //!     }
 //!
 //!     pub struct Thing<T>(pub T);
 //!
-//!     impl<T: [c0nst] Default> c0nst Default for Thing<T> {
+//!     c0nst impl<T: [c0nst] Default> Default for Thing<T> {
 //!         fn default() -> Self {
 //!             Self(T::default())
 //!         }
